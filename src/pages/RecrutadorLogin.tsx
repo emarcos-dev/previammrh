@@ -1,13 +1,48 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Briefcase } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const RecrutadorLogin = () => {
-  const handleGoogleLogin = () => {
-    // Implementação do login com Google OAuth será feita quando o banco estiver configurado
-    console.log("Google login clicked");
+  const { signInWithGoogle, user, loading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/');
+    }
+  }, [user, loading, navigate]);
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoggingIn(true);
+      await signInWithGoogle();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao fazer login",
+        description: error.message || "Ocorreu um erro ao tentar fazer login. Tente novamente.",
+        variant: "destructive",
+      });
+      setIsLoggingIn(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
@@ -34,9 +69,10 @@ const RecrutadorLogin = () => {
               size="lg"
               variant="outline"
               className="w-full flex items-center justify-center gap-3 border-2 border-border hover:border-primary hover:bg-background/80 py-6 text-lg"
+              disabled={isLoggingIn}
             >
               <FcGoogle className="w-6 h-6" />
-              Entrar com Google
+              {isLoggingIn ? "Conectando..." : "Entrar com Google"}
             </Button>
 
             <div className="relative">
@@ -54,13 +90,13 @@ const RecrutadorLogin = () => {
               </p>
               <p className="text-xs text-muted-foreground">
                 Ao fazer login, você concorda com nossos{" "}
-                <a href="#" className="text-primary hover:underline">
+                <Link to="/termos-de-uso" className="text-primary hover:underline">
                   Termos de Uso
-                </a>{" "}
+                </Link>{" "}
                 e{" "}
-                <a href="#" className="text-primary hover:underline">
+                <Link to="/politica-de-privacidade" className="text-primary hover:underline">
                   Política de Privacidade
-                </a>
+                </Link>
               </p>
             </div>
           </div>
